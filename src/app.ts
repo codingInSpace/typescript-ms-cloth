@@ -1,25 +1,39 @@
 import * as THREE from 'three'
 const TrackballControls = require('three-trackballcontrols')
+import Spring from './spring'
 
 class App {
+
+  // Constants
+  readonly DT: number = 0.05
+
+  // Data
+  private uniforms: any
+  private springs: Spring[]
+  private forces: THREE.Vector3[]
+
+  // Graphics engine
+  public camera: THREE.PerspectiveCamera
+  public renderer: THREE.WebGLRenderer
+  private scene: THREE.Scene
+  private controls: any
+
   constructor() {
     this.uniforms = {
       u_time: { type: 'f', value: 1.0 },
       u_resolution: { type: 'v2', value: new THREE.Vector2() }
     }
 
-    this.dt = 0.05
-
     this.createScene()
   }
 
-  createScene() {
+  private createScene(): void {
 
     // Scene, camera
     this.scene = new THREE.Scene()
     this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 15000)
     this.camera.position.set(0.0, 0.0, 50.0)
-    this.camera.lookAt(0.0, 0.0, 0.0)
+    this.camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0))
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ alpha: true })
@@ -44,15 +58,19 @@ class App {
     this.render()
   }
 
-  render() {
+  private render() {
     requestAnimationFrame(() => {
       this.render()
     })
 
-    this.uniforms.u_time.value += this.dt
+    this.uniforms.u_time.value += this.DT
 
     this.renderer.render(this.scene, this.camera)
     this.controls.update()
+  }
+
+  public getUnis(): any {
+    return this.uniforms
   }
 }
 

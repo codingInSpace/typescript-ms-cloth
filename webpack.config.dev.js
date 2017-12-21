@@ -6,8 +6,11 @@ module.exports = {
 	devtool: 'source-map',
 	entry: [
 		'webpack-hot-middleware/client',
-    './src/main.js'
+    './src/main.ts'
   ],
+	resolve: {
+		extensions: ['.js', '.ts', 'css']
+	},
   output: {
     path: path.resolve(ROOT_PATH, '/build/'),
     filename: 'bundle.js',
@@ -18,15 +21,26 @@ module.exports = {
     new webpack.NoErrorsPlugin()
 	],
 	module: {
-		loaders: [
+		rules: [
+      { 
+        test: /\.ts$/, 
+        enforce: 'pre', 
+        loader: 'tslint-loader' 
+      },
 			{
 				test: /\.js$/,
 				exclude: /node_modules/,
 				loader: 'babel-loader',
 				query: {
 					presets: [ 'es2015' ]
-				}
-			}
+        },
+      },
+      { 
+        test: /\.ts$/, 
+        loader: 'ts-loader', 
+        exclude: '/node_modules/' 
+      }
+
       //{
       //  test: /\.glsl$/,
       //  loader: 'webpack-glsl'
