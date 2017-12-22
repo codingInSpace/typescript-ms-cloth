@@ -62,7 +62,6 @@ class App {
     // Renderer
     this.renderer = new THREE.WebGLRenderer({alpha: true})
     this.renderer.setSize(window.innerWidth, window.innerHeight)
-    this.renderer.setClearColor( 0x000000, 1 )
     document.body.appendChild(this.renderer.domElement)
 
     this.controls = new TrackballControls(this.camera, this.renderer.domElement)
@@ -181,9 +180,9 @@ class App {
     geoZ.vertices.push(new THREE.Vector3(0, 0, 0))
     geoZ.vertices.push(new THREE.Vector3(0, 0, 2))
 
-    const lineX = new THREE.Line(geoX, new THREE.LineBasicMaterial({ color: 0xf985a3, linewidth: 3 }))
-    const lineY = new THREE.Line(geoY, new THREE.LineBasicMaterial({ color: 0x85f9a4, linewidth: 3 }))
-    const lineZ = new THREE.Line(geoZ, new THREE.LineBasicMaterial({ color: 0x86d7f9, linewidth: 3 }))
+    const lineX = new THREE.Line(geoX, new THREE.LineBasicMaterial({ color: 0xb3e099, linewidth: 3 }))
+    const lineY = new THREE.Line(geoY, new THREE.LineBasicMaterial({ color: 0x028f76, linewidth: 3 }))
+    const lineZ = new THREE.Line(geoZ, new THREE.LineBasicMaterial({ color: 0xb3e099, linewidth: 3 }))
 
     this.scene.add(lineX)
     this.scene.add(lineY)
