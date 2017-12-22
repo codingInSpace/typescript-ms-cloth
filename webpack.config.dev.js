@@ -12,9 +12,10 @@ module.exports = {
 		extensions: ['.js', '.ts', 'css']
 	},
   output: {
-    path: path.resolve(ROOT_PATH, '/public/'),
+    path: path.join(ROOT_PATH, 'public'),
     filename: 'bundle.js',
-		publicPath: '/public/'
+    publicPath: path.join(ROOT_PATH, 'public')
+		//publicPath: '/public/'
   },
 	plugins: [
 		new webpack.HotModuleReplacementPlugin(),
