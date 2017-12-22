@@ -1,9 +1,9 @@
 class Spring {
-  public p1: number
-  public p2: number
-  public kd: number
-  public ks: number
-  public restLength: number
+  public p1: number = -1
+  public p2: number = -1
+  public kd: number = 0.5
+  public ks: number = 0.5
+  public restLength: number = 0
 
   constructor(p1, p2, kd, ks, restLength) {
     this.p1 = p1

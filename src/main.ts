@@ -6,8 +6,6 @@ const onWindowResize = () => {
   app.renderer.setSize(window.innerWidth, window.innerHeight)
   app.camera.aspect = window.innerWidth / window.innerHeight
   app.camera.updateProjectionMatrix()
-  app.getUnis().u_resolution.value.x = app.renderer.domElement.width
-  app.getUnis().u_resolution.value.y = app.renderer.domElement.height
 }
 
 window.addEventListener( 'resize', onWindowResize, false )
