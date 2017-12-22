@@ -10,7 +10,7 @@ class App {
   readonly DT: number = 1.0 / 60.0
   readonly NUM_X: number = 20
   readonly NUM_Y: number = 20
-  readonly DEFAULT_DAMPING: number = 60
+  readonly DEFAULT_DAMPING: number = -2
   readonly GRAVITY: THREE.Vector3 = new THREE.Vector3(0.0, -9.8, 0.0)
   readonly MASS: number = 2
   readonly size: number = 4 //world space size of cloth
@@ -34,6 +34,7 @@ class App {
   private velocities: THREE.Vector3[] = []
   private vertexUVs: THREE.Vector2[] = []
   private clothGeometry: THREE.Geometry
+  private lastGeometry: THREE.Geometry
   private clothMesh: THREE.Mesh
 
   // Graphics engine
@@ -75,6 +76,7 @@ class App {
     this.drawSceneGeometry()
 
     this.clothGeometry = new THREE.Geometry()
+    this.lastGeometry = new THREE.Geometry()
 
     // Cloth vertices
     for (let j = 0; j < this.simV; j++) {
@@ -84,6 +86,7 @@ class App {
         this.forces.push(new THREE.Vector3(0, 0, 0))
         this.velocities.push(new THREE.Vector3(0, 0, 0))
         this.clothGeometry.vertices.push(tmp)
+        this.lastGeometry.vertices.push(tmp)
         this.vertexUVs.push(uv)
       }
     }
@@ -195,18 +198,19 @@ class App {
     //this.scene.add( plane )
   }
 
-  private computeForces(): void {
+  private computeForcesWithVerlet(): void {
     for (let i = 0; i < this.clothMesh.geometry.vertices.length; i++) {
       this.forces[i].x = 0
       this.forces[i].y = 0
       this.forces[i].z = 0
 
+      let velocity = this.getVerletVelocity(this.clothMesh.geometry.vertices[i], this.lastGeometry.vertices[i])
+
       if (i !== 0 && i !== this.NUM_X)
         this.forces[i].add(this.GRAVITY)
 
-      this.forces[i].sub(this.velocities[i].multiplyScalar(this.DEFAULT_DAMPING))
+      this.forces[i].add(velocity.multiplyScalar(this.DEFAULT_DAMPING))
     }
-
 
     // Spring forces
     const deltaP = new THREE.Vector3()
@@ -215,8 +219,10 @@ class App {
     for (let i = 0; i < this.springs.length; i++) {
       const p1 = this.clothMesh.geometry.vertices[this.springs[i].p1]
       const p2 = this.clothMesh.geometry.vertices[this.springs[i].p2]
-      const v1 = this.velocities[this.springs[i].p1]
-      const v2 = this.velocities[this.springs[i].p2]
+      const p1Last = this.lastGeometry.vertices[this.springs[i].p1]
+      const p2Last = this.lastGeometry.vertices[this.springs[i].p2]
+      const v1 = this.getVerletVelocity(p1, p1Last)
+      const v2 = this.getVerletVelocity(p2, p2Last)
 
       deltaP.subVectors(p1, p2)
       deltaV.subVectors(v1, v2)
@@ -234,36 +240,51 @@ class App {
     }
   }
 
-  private integrateEuler(): void {
-    const deltaTimeMass = this.DT / this.MASS
+  private getVerletVelocity(x_i: THREE.Vector3, xi_last: THREE.Vector3): THREE.Vector3 {
+    let diff = new THREE.Vector3(0, 0, 0)
+    diff.subVectors(x_i, xi_last)
+    diff.multiplyScalar(1.0 / this.DT)
+    return diff
+  }
+
+  private integrateVerlet(): void {
+    const deltaTimeMass = (this.DT * this.DT) / this.MASS
     const N = this.clothMesh.geometry.vertices.length
     const oldP = this.clothMesh.geometry.vertices[N - 1].clone()
     this.clothMesh.geometry.verticesNeedUpdate = true
-    this.clothMesh.geometry.elementsNeedUpdate = true
     this.clothMesh.geometry.normalsNeedUpdate = true
 
     for (let i = 0; i < N; i++) {
-      const oldV = this.velocities[i]
-      this.velocities[i].add(this.forces[i].multiplyScalar(deltaTimeMass))
-      this.clothMesh.geometry.vertices[i].add(oldV.multiplyScalar(this.DT))
+      let buffer = this.clothMesh.geometry.vertices[i].clone()
+
+      let diff = new THREE.Vector3(0, 0, 0)
+      diff.subVectors(this.clothMesh.geometry.vertices[i], this.lastGeometry.vertices[i])
+
+      // vertex = vertex + (vertex - last_vertex) + deltaTime * force;
+      const force = this.forces[i].clone()
+      force.multiplyScalar(deltaTimeMass)
+
+      this.clothMesh.geometry.vertices[i].add(diff)
+      this.clothMesh.geometry.vertices[i].add(force)
+
+      this.lastGeometry.vertices[i] = buffer
+
       if (this.clothMesh.geometry.vertices[i].y < 0) {
         this.clothMesh.geometry.vertices[i].y = 0
       }
     }
 
-    // No need to go on if nothing happened to the vertices
-    const diff = new THREE.Vector3(0, 0, 0)
-    diff.subVectors(oldP, this.clothMesh.geometry.vertices[N - 1])
-    //console.log(this.clothMesh.geometry.vertices[N - 1])
-    //console.log(diff)
-    //console.log(diff.lengthSq())
-    this.simulate = (diff.lengthSq() > this.EPSILON2)
+    let lastDiff = new THREE.Vector3(0, 0, 0)
+    lastDiff.subVectors(oldP, this.clothMesh.geometry.vertices[N - 1])
+    this.simulate = (lastDiff.lengthSq() > this.EPSILON2)
   }
 
   private stepPhysics(): void {
-    this.computeForces()
-    //console.log('Force: ' + this.forces[1].z + ' Vel: ' + this.velocities[1].z)
-    this.integrateEuler()
+    //this.computeForces()
+    this.computeForcesWithVerlet()
+    console.log('Force: ' + this.forces[1].z + ' Vel: ' + this.velocities[1].z)
+    //this.integrateEuler()
+    this.integrateVerlet()
   }
 
   // Add Spring to data
