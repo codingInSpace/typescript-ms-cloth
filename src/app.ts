@@ -115,7 +115,7 @@ class App {
     this.clothGeometry.computeFaceNormals()
     this.clothGeometry.computeVertexNormals()
 
-    const clothMaterial = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load('fabric.png'), side: THREE.DoubleSide})
+    const clothMaterial = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load('fabric.png'), side: THREE.DoubleSide})
     this.clothMesh = new THREE.Mesh(this.clothGeometry, clothMaterial)
     this.scene.add(this.clothMesh)
 
