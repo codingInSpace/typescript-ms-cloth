@@ -35,7 +35,6 @@ class App {
   private texture: any
   private springs: Spring[] = []
   private forces: THREE.Vector3[] = []
-  private velocities: THREE.Vector3[] = []
   private vertexUVs: THREE.Vector2[] = []
   private clothGeometry: THREE.Geometry
   private lastGeometry: THREE.Geometry
@@ -52,9 +51,7 @@ class App {
     this.simU = this.NUM_X + 1
     this.simV = this.NUM_Y + 1
 
-    this.texture = THREE.ImageUtils.loadTexture( 'https://www.earlypiano.co.uk/wp-content/uploads/2013/02/Early-Keyboard-Action-Cloth.jpg', null, () => {
-      this.createScene()
-    })
+    this.createScene()
   }
 
   private createScene(): void {
@@ -72,12 +69,6 @@ class App {
 
     this.controls = new TrackballControls(this.camera, this.renderer.domElement)
 
-    const sphereGeo = new THREE.SphereGeometry(2, 16, 16)
-    const sphereMat = new THREE.MeshBasicMaterial({color: 0xcc00ff, side: THREE.DoubleSide})
-    const sphere = new THREE.Mesh(sphereGeo, sphereMat)
-    sphere.position.y = 2
-    //this.scene.add(sphere)
-
     this.drawSceneGeometry()
 
     this.clothGeometry = new THREE.Geometry()
@@ -89,7 +80,6 @@ class App {
         const tmp = new THREE.Vector3(((i / (this.simU - 1)) * 2.0 - 1.0) * this.hsize, this.size + 1, ((j / (this.simV - 1.0) ) * this.size))
         const uv = new THREE.Vector2(i / (this.simU - 1), 1.0 - j / (this.simV - 1))
         this.forces.push(new THREE.Vector3(0, 0, 0))
-        this.velocities.push(new THREE.Vector3(0, 0, 0))
         this.clothGeometry.vertices.push(tmp)
         this.lastGeometry.vertices.push(tmp)
         this.vertexUVs.push(uv)
@@ -125,7 +115,7 @@ class App {
     this.clothGeometry.computeFaceNormals()
     this.clothGeometry.computeVertexNormals()
 
-    const clothMaterial = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load('public/fabric.png'), side: THREE.DoubleSide})
+    const clothMaterial = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load('fabric.png'), side: THREE.DoubleSide})
     this.clothMesh = new THREE.Mesh(this.clothGeometry, clothMaterial)
     this.scene.add(this.clothMesh)
 
@@ -173,6 +163,7 @@ class App {
 
     this.clothMesh.position.y = 0
     this.addSphere()
+    this.addButton()
     this.render()
   }
 
@@ -196,12 +187,6 @@ class App {
     this.scene.add(lineX)
     this.scene.add(lineY)
     this.scene.add(lineZ)
-
-    //const planeGeo = new THREE.PlaneGeometry( -20, 20, 10, 10 )
-    //const planeMat = new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } )
-    //const plane = new THREE.Mesh( planeGeo, planeMat )
-    //plane.rotation.x = Math.PI / 2.0
-    //this.scene.add( plane )
   }
 
   private addSphere(): void {
@@ -242,7 +227,6 @@ class App {
       deltaV.subVectors(v1, v2)
       const dist = deltaP.length()
 
-      //console.log("p1: "+p1+", p2: "+p2+" Dis: "+dist);
       const leftTerm  = -this.springs[i].ks * (dist - this.springs[i].restLength)
       const rightTerm = -this.springs[i].kd * ((deltaV.dot(deltaP)) / dist)
       const springForce = (deltaP.normalize()).multiplyScalar(leftTerm + rightTerm)
@@ -274,7 +258,6 @@ class App {
       let diff = new THREE.Vector3(0, 0, 0)
       diff.subVectors(this.clothMesh.geometry.vertices[i], this.lastGeometry.vertices[i])
 
-      // vertex = vertex + (vertex - last_vertex) + deltaTime * force;
       const force = this.forces[i].clone()
       force.multiplyScalar(deltaTimeMass)
 
@@ -289,6 +272,7 @@ class App {
         }
       }
 
+      // vertex = vertex + (vertex - last_vertex) + deltaTime * force;
       this.clothMesh.geometry.vertices[i].add(diff)
       this.clothMesh.geometry.vertices[i].add(force)
       this.clothMesh.geometry.vertices[i].add(posAddition)
@@ -317,6 +301,21 @@ class App {
     const restLength = deltaP.dot(deltaP)
 
     this.springs.push(new Spring(a, b, kd, ks, restLength))
+  }
+
+  private addButton(): void {
+    const button = document.createElement('button')
+    button.innerHTML = 'Toggle sphere'
+    document.body.appendChild(button)
+
+    button.addEventListener ('click', () => {
+      this.sphereCollision = !this.sphereCollision
+      if (this.sphereCollision) {
+        this.scene.add(this.sphereMesh)
+      } else {
+        this.scene.remove(this.sphereMesh)
+      }
+    })
   }
 
   private render() {

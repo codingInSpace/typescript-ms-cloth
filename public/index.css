@@ -1,0 +1,22 @@
+* {
+  background-color: #8EC5FC;
+  background-image: linear-gradient(62deg, #8EC5FC 0%, #E0C3FC 100%);
+  margin: 0;
+}
+
+button {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  line-height: 60px;
+  font-weight: bold;
+  padding: 0 40px;
+  background: #7455fc;
+  color: white;
+  border: none;
+  z-index: 99;
+}
+button:hover {
+  background: #c184ff;
+  color: black;
+}
