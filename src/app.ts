@@ -27,12 +27,10 @@ class App {
   // Variables
   private simU: number
   private simV: number
-  private simulate: boolean = true
   private time: number = 0.1
   private sphereCollision: boolean = true
 
   // Data
-  private texture: any
   private springs: Spring[] = []
   private forces: THREE.Vector3[] = []
   private vertexUVs: THREE.Vector2[] = []
@@ -299,10 +297,6 @@ class App {
         this.clothMesh.geometry.vertices[i].y = 0
       }
     }
-
-    let lastDiff = new THREE.Vector3(0, 0, 0)
-    lastDiff.subVectors(oldP, this.clothMesh.geometry.vertices[N - 1])
-    this.simulate = (lastDiff.lengthSq() > this.EPSILON2)
   }
 
   private stepPhysics(): void {
@@ -339,12 +333,10 @@ class App {
       this.render()
     })
 
-    if (this.simulate) {
-      this.clothMesh.geometry.computeFaceNormals()
-      this.clothMesh.geometry.computeVertexNormals()
-      this.clothMesh.geometry.normalsNeedUpdate = true
-      this.stepPhysics()
-    }
+    this.clothMesh.geometry.computeFaceNormals()
+    this.clothMesh.geometry.computeVertexNormals()
+    this.clothMesh.geometry.normalsNeedUpdate = true
+    this.stepPhysics()
 
     this.time += this.DT
 
