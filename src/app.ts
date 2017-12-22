@@ -51,9 +51,7 @@ class App {
     this.simU = this.NUM_X + 1
     this.simV = this.NUM_Y + 1
 
-    this.texture = THREE.ImageUtils.loadTexture( 'https://www.earlypiano.co.uk/wp-content/uploads/2013/02/Early-Keyboard-Action-Cloth.jpg', null, () => {
-      this.createScene()
-    })
+    this.createScene()
   }
 
   private createScene(): void {
@@ -117,7 +115,7 @@ class App {
     this.clothGeometry.computeFaceNormals()
     this.clothGeometry.computeVertexNormals()
 
-    const clothMaterial = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load('public/fabric.png'), side: THREE.DoubleSide})
+    const clothMaterial = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load('fabric.png'), side: THREE.DoubleSide})
     this.clothMesh = new THREE.Mesh(this.clothGeometry, clothMaterial)
     this.scene.add(this.clothMesh)
 
@@ -165,6 +163,7 @@ class App {
 
     this.clothMesh.position.y = 0
     this.addSphere()
+    this.addButton()
     this.render()
   }
 
@@ -302,6 +301,21 @@ class App {
     const restLength = deltaP.dot(deltaP)
 
     this.springs.push(new Spring(a, b, kd, ks, restLength))
+  }
+
+  private addButton(): void {
+    const button = document.createElement('button')
+    button.innerHTML = 'Toggle sphere'
+    document.body.appendChild(button)
+
+    button.addEventListener ('click', () => {
+      this.sphereCollision = !this.sphereCollision
+      if (this.sphereCollision) {
+        this.scene.add(this.sphereMesh)
+      } else {
+        this.scene.remove(this.sphereMesh)
+      }
+    })
   }
 
   private render() {

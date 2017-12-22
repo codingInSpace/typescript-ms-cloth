@@ -15,7 +15,13 @@ module.exports = {
     path: path.join(ROOT_PATH, 'public'),
     filename: 'bundle.js',
     publicPath: path.join(ROOT_PATH, 'public')
-		//publicPath: '/public/'
+  },
+  devServer: {
+    publicPath: '/',
+    contentBase: path.join(ROOT_PATH, "public"),
+    compress: true,
+    hot: true,
+    port: 1337
   },
 	plugins: [
 		new webpack.HotModuleReplacementPlugin(),
