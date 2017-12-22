@@ -26,6 +26,7 @@ class App {
   private simU: number
   private simV: number
   private simulate: boolean = true
+  private time: number = 0.1
 
   // Data
   private texture: any
@@ -36,6 +37,7 @@ class App {
   private clothGeometry: THREE.Geometry
   private lastGeometry: THREE.Geometry
   private clothMesh: THREE.Mesh
+  private sphereMesh: THREE.Mesh
 
   // Graphics engine
   private scene: THREE.Scene
@@ -167,6 +169,7 @@ class App {
     }
 
     this.clothMesh.position.y = -1
+    this.addSphere()
     this.render()
   }
 
@@ -196,6 +199,14 @@ class App {
     //const plane = new THREE.Mesh( planeGeo, planeMat )
     //plane.rotation.x = Math.PI / 2.0
     //this.scene.add( plane )
+  }
+
+  private addSphere(): void {
+    const geo = new THREE.SphereGeometry(0.4, 32, 32)
+    const mat = new THREE.MeshPhongMaterial()
+    this.sphereMesh = new THREE.Mesh(geo, mat)
+    this.sphereMesh.position.y = 2
+    this.scene.add(this.sphereMesh)
   }
 
   private computeForcesWithVerlet(): void {
@@ -280,10 +291,8 @@ class App {
   }
 
   private stepPhysics(): void {
-    //this.computeForces()
     this.computeForcesWithVerlet()
-    console.log('Force: ' + this.forces[1].z + ' Vel: ' + this.velocities[1].z)
-    //this.integrateEuler()
+    //console.log('Force: ' + this.forces[1].z + ' Vel: ' + this.velocities[1].z)
     this.integrateVerlet()
   }
 
@@ -307,6 +316,9 @@ class App {
       this.clothMesh.geometry.normalsNeedUpdate = true
       this.stepPhysics()
     }
+
+    this.sphereMesh.position.z = 3.0 * Math.sin(50.0 * this.time * this.DT)
+    this.time += this.DT
 
     this.renderer.render(this.scene, this.camera)
     this.controls.update()
