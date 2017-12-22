@@ -13,7 +13,7 @@ class App {
   readonly DEFAULT_DAMPING: number = -2
   readonly GRAVITY: THREE.Vector3 = new THREE.Vector3(0.0, -9.8, 0.0)
   readonly MASS: number = 2
-  readonly size: number = 4 //world space size of cloth
+  readonly size: number = 6 //world space size of cloth
   readonly hsize: number = this.size / 2
   readonly KS_STRUCT: number = 1000
   readonly KD_STRUCT: number = 0.5
@@ -21,12 +21,15 @@ class App {
   readonly KD_SHEAR: number = 0.5
   readonly KS_BEND: number = 1000
   readonly KD_BEND: number = 0.5
+  readonly SPHERE_RADIUS: number = 0.5
+  readonly SPHERE_Y_POS: number = 3.5
 
   // Variables
   private simU: number
   private simV: number
   private simulate: boolean = true
   private time: number = 0.1
+  private sphereCollision: boolean = true
 
   // Data
   private texture: any
@@ -168,7 +171,7 @@ class App {
       this.addSpring(((this.simV - 3) * this.simU) + i, ((this.simV - 1) * this.simU) + i, this.KS_BEND, this.KD_BEND)
     }
 
-    this.clothMesh.position.y = -1
+    this.clothMesh.position.y = 0
     this.addSphere()
     this.render()
   }
@@ -202,10 +205,10 @@ class App {
   }
 
   private addSphere(): void {
-    const geo = new THREE.SphereGeometry(0.4, 32, 32)
+    const geo = new THREE.SphereGeometry(this.SPHERE_RADIUS, 32, 32)
     const mat = new THREE.MeshPhongMaterial()
     this.sphereMesh = new THREE.Mesh(geo, mat)
-    this.sphereMesh.position.y = 2
+    this.sphereMesh.position.y = this.SPHERE_Y_POS
     this.scene.add(this.sphereMesh)
   }
 
@@ -275,8 +278,20 @@ class App {
       const force = this.forces[i].clone()
       force.multiplyScalar(deltaTimeMass)
 
+      let posAddition = new THREE.Vector3(0, 0, 0)
+      if (this.sphereCollision) {
+        const sphereCenter = this.sphereMesh.position.clone()
+        let vertexSphereDiff = this.clothMesh.geometry.vertices[i].clone().sub(sphereCenter)
+        const dist = vertexSphereDiff.length()
+        if (dist - this.SPHERE_RADIUS < 0.0) {      // sphere signed distance function
+          const dir = this.clothMesh.geometry.vertices[i].clone().sub(sphereCenter).normalize()
+          posAddition = dir.multiplyScalar(0.18)
+        }
+      }
+
       this.clothMesh.geometry.vertices[i].add(diff)
       this.clothMesh.geometry.vertices[i].add(force)
+      this.clothMesh.geometry.vertices[i].add(posAddition)
 
       this.lastGeometry.vertices[i] = buffer
 
@@ -292,7 +307,6 @@ class App {
 
   private stepPhysics(): void {
     this.computeForcesWithVerlet()
-    //console.log('Force: ' + this.forces[1].z + ' Vel: ' + this.velocities[1].z)
     this.integrateVerlet()
   }
 
