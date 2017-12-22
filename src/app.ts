@@ -13,7 +13,7 @@ class App {
   readonly DEFAULT_DAMPING: number = -2
   readonly GRAVITY: THREE.Vector3 = new THREE.Vector3(0.0, -9.8, 0.0)
   readonly MASS: number = 2
-  readonly size: number = 6 //world space size of cloth
+  readonly size: number = 8 //world space size of cloth
   readonly hsize: number = this.size / 2
   readonly KS_STRUCT: number = 1000
   readonly KD_STRUCT: number = 0.5
@@ -40,6 +40,7 @@ class App {
   private lastGeometry: THREE.Geometry
   private clothMesh: THREE.Mesh
   private sphereMesh: THREE.Mesh
+  private mirrorSphereCamera: THREE.CubeCamera
 
   // Graphics engine
   private scene: THREE.Scene
@@ -115,14 +116,23 @@ class App {
     this.clothGeometry.computeFaceNormals()
     this.clothGeometry.computeVertexNormals()
 
-    const clothMaterial = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load('fabric.png'), side: THREE.DoubleSide})
+    const clothMaterial = new THREE.MeshPhongMaterial({
+      map: new THREE.TextureLoader().load('fabric.png'),
+      side: THREE.DoubleSide,
+      shininess: 0.4,
+      specular: 0xd87fff
+    })
+
     this.clothMesh = new THREE.Mesh(this.clothGeometry, clothMaterial)
     this.scene.add(this.clothMesh)
 
     // Scene light
-    const light = new THREE.PointLight(0xdddddd);
-    light.position.set(0, 3, 25);
-    this.scene.add(light);
+    const plight = new THREE.PointLight(0xdddddd);
+    plight.position.set(0, 3, 25);
+    this.scene.add(plight);
+
+    const alight = new THREE.AmbientLight(0x3a3a3a);
+    this.scene.add(alight);
 
     // Add springs
     // Structural horizontal
@@ -190,10 +200,16 @@ class App {
   }
 
   private addSphere(): void {
+
+    this.mirrorSphereCamera = new THREE.CubeCamera( 0.1, 5000, 512 )
+    this.scene.add( this.mirrorSphereCamera )
+
     const geo = new THREE.SphereGeometry(this.SPHERE_RADIUS, 32, 32)
-    const mat = new THREE.MeshPhongMaterial()
+    this.mirrorSphereCamera.renderTarget.texture.mapping = THREE.CubeRefractionMapping
+    const mat = new THREE.MeshPhongMaterial( { envMap: this.mirrorSphereCamera.renderTarget } )
     this.sphereMesh = new THREE.Mesh(geo, mat)
     this.sphereMesh.position.y = this.SPHERE_Y_POS
+    this.mirrorSphereCamera.position.set(this.sphereMesh.position.x, this.sphereMesh.position.y, this.sphereMesh.position.z)
     this.scene.add(this.sphereMesh)
   }
 
@@ -268,7 +284,7 @@ class App {
         const dist = vertexSphereDiff.length()
         if (dist - this.SPHERE_RADIUS < 0.0) {      // sphere signed distance function
           const dir = this.clothMesh.geometry.vertices[i].clone().sub(sphereCenter).normalize()
-          posAddition = dir.multiplyScalar(0.18)
+          posAddition = dir.multiplyScalar(0.38)
         }
       }
 
@@ -330,8 +346,13 @@ class App {
       this.stepPhysics()
     }
 
-    this.sphereMesh.position.z = 3.0 * Math.sin(50.0 * this.time * this.DT)
     this.time += this.DT
+
+    this.sphereMesh.visible = false;
+    this.sphereMesh.position.z = 7.0 * Math.sin(40.0 * this.time * this.DT)
+    this.mirrorSphereCamera.position.set(this.sphereMesh.position.x, this.sphereMesh.position.y, this.sphereMesh.position.z)
+    this.mirrorSphereCamera.update( this.renderer, this.scene )
+    this.sphereMesh.visible = true;
 
     this.renderer.render(this.scene, this.camera)
     this.controls.update()
