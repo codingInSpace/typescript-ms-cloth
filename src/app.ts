@@ -58,7 +58,7 @@ class App {
     // Scene, camera
     this.scene = new THREE.Scene()
     this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200)
-    this.camera.position.set(0.0, 0.0, 50.0)
+    this.camera.position.set(10.0, 5.0, 20.0)
     this.camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0))
 
     // Renderer
